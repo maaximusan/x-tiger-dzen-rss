@@ -7,9 +7,10 @@
   "requires": "5.8",
   "tested": "6.5",
   "requires_php": "7.2",
-  "download_url": "https://api.github.com/repos/maaximusan/x-tiger-dzen-rss/releases/assets/123456789",
+  "download_url": "https://api.github.com/repos/maaximusan/x-tiger-dzen-rss/releases/assets/1133454624",
   "sections": {
     "description": "Безотказная RSS-лента для Дзена",
     "changelog": "Добавлена админка, защита от дубликатов, строгая валидация."
   }
+
 }

@@ -1,0 +1,15 @@
+{
+  "name": "X-Tiger RSS for Dzen",
+  "slug": "x-tiger-dzen-rss",
+  "version": "1.1.0",
+  "author": "X-Tiger",
+  "author_profile": "https://x-tiger.ru",
+  "requires": "5.8",
+  "tested": "6.5",
+  "requires_php": "7.2",
+  "download_url": "https://api.github.com/repos/maaximusan/x-tiger-dzen-rss/releases/assets/123456789",
+  "sections": {
+    "description": "Безотказная RSS-лента для Дзена",
+    "changelog": "Добавлена админка, защита от дубликатов, строгая валидация."
+  }
+}

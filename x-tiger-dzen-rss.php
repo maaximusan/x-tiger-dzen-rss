@@ -16,6 +16,13 @@ if (!defined('XT_DZEN_OPTION')) {
     define('XT_DZEN_OPTION', 'xt_dzen_settings');
 }
 
+if (!defined('XT_DZEN_UPDATE_URL')) {
+    define(
+        'XT_DZEN_UPDATE_URL',
+        'https://raw.githubusercontent.com/maaximusan/x-tiger-dzen-rss/main/update.json'
+    );
+}
+
 /* =====================
    АКТИВАЦИЯ
 ===================== */
@@ -167,4 +174,5 @@ function xt_dzen_clean_html($html) {
 if (is_admin()) {
     require_once plugin_dir_path(__FILE__) . 'admin.php';
 }
+
 

@@ -1,15 +1,15 @@
 {
   "name": "X-Tiger RSS for Dzen",
   "slug": "x-tiger-dzen-rss",
-  "version": "1.1.3",
+  "version": "1.1.4",
   "author": "X-Tiger",
   "author_profile": "https://x-tiger.ru",
   "requires": "5.8",
   "tested": "6.5",
   "requires_php": "7.2",
-  "download_url": "https://github.com/maaximusan/x-tiger-dzen-rss/releases/download/1.1.3/x-tiger-dzen-rss.zip",
+  "download_url": "https://github.com/maaximusan/x-tiger-dzen-rss/releases/download/1.1.4/x-tiger-dzen-rss.zip",
   "sections": {
-    "description": "RSS-плагин для публикации статей в Яндекс.Дзен с полной валидацией контента.",
-    "changelog": "1.1.3 — добавлено описание канала RSS, улучшена логика модерации Дзена? исправлены ошибки."
+    "description": "RSS-плагин для публикации статей в Яндекс.Дзен с корректной разметкой и требованиями модерации.",
+    "changelog": "1.1.4 — стабилизация админки, исправления генерации RSS и соответствие требованиям Дзена."
   }
 }

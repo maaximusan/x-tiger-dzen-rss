@@ -1,52 +1,56 @@
 <?php
 /**
  * Plugin Name: X-Tiger RSS for Dzen
- * Description: RSS-лента для публикации статей в Яндекс.Дзен с корректной разметкой
- * Version: 1.1.4
+ * Description: RSS-лента для публикации статей в Яндекс.Дзен с корректной разметкой и автообновлением
+ * Version: 1.1.5
  * Author: X-Tiger
  * Text Domain: x-tiger-dzen-rss
  */
 
-if (!defined('ABSPATH')) exit;
+if (!defined('ABSPATH')) {
+    exit;
+}
 
-/* =====================
+/* ======================================================
    КОНСТАНТЫ
-===================== */
-if (!defined('XT_DZEN_OPTION')) {
-    define('XT_DZEN_OPTION', 'xt_dzen_settings');
-}
+====================================================== */
 
-if (!defined('XT_DZEN_UPDATE_URL')) {
-    define(
-        'XT_DZEN_UPDATE_URL',
-        'https://raw.githubusercontent.com/maaximusan/x-tiger-dzen-rss/main/update.json'
-    );
-}
+define('XT_DZEN_OPTION', 'xt_dzen_settings');
 
-/* =====================
+define(
+    'XT_DZEN_UPDATE_URL',
+    'https://raw.githubusercontent.com/maaximusan/x-tiger-dzen-rss/main/update.json'
+);
+
+/* ======================================================
    АКТИВАЦИЯ
-===================== */
+====================================================== */
+
 register_activation_hook(__FILE__, function () {
+
     add_option(XT_DZEN_OPTION, [
-        'mode'                => 'native',
+        'posts_limit'         => 10,
         'days_limit'          => 30,
-        'posts_limit'         => 20,
+        'mode'                => 'native',
         'channel_description' => 'Авторский блог о сайтах и цифровых продуктах. Аналитика, наблюдения и объяснение типичных ситуаций в бизнесе без рекламы и призывов.',
     ]);
+
     flush_rewrite_rules();
 });
 
-/* =====================
+/* ======================================================
    RSS ENDPOINT
-===================== */
+====================================================== */
+
 add_action('init', function () {
     add_rewrite_rule('^dzen/rss\.xml$', 'index.php?xt_dzen_rss=1', 'top');
     add_rewrite_tag('%xt_dzen_rss%', '1');
 });
 
-/* =====================
+/* ======================================================
    RSS GENERATION
-===================== */
+====================================================== */
+
 add_action('template_redirect', function () {
 
     if ((int) get_query_var('xt_dzen_rss') !== 1) {
@@ -98,7 +102,6 @@ add_action('template_redirect', function () {
         $raw   = apply_filters('the_content', $post->post_content);
         $clean = xt_dzen_clean_html($raw);
 
-        // минимальная длина уже ПОСЛЕ очистки
         if (mb_strlen(strip_tags($clean)) < 300) continue;
 ?>
     <item>
@@ -123,9 +126,10 @@ add_action('template_redirect', function () {
     exit;
 });
 
-/* =====================
-   HTML CLEANER FOR DZEN
-===================== */
+/* ======================================================
+   HTML CLEANER (DZEN SAFE)
+====================================================== */
+
 function xt_dzen_clean_html($html) {
 
     libxml_use_internal_errors(true);
@@ -133,7 +137,6 @@ function xt_dzen_clean_html($html) {
     $dom = new DOMDocument('1.0', 'UTF-8');
     $dom->loadHTML('<?xml encoding="utf-8" ?>' . $html);
 
-    // ВАЖНО: h1 УБРАН
     $allowed = [
         'p','a','b','i','u','s',
         'h2','h3','h4',
@@ -152,7 +155,6 @@ function xt_dzen_clean_html($html) {
             continue;
         }
 
-        // чистим все атрибуты
         while ($node->attributes && $node->attributes->length) {
             $node->removeAttributeNode($node->attributes->item(0));
         }
@@ -168,13 +170,9 @@ function xt_dzen_clean_html($html) {
     return trim($out);
 }
 
-/* =====================
-   ADMIN
-===================== */
-if (is_admin()) {
-    require_once plugin_dir_path(__FILE__) . 'admin.php';
-}
-
+/* ======================================================
+   AUTO UPDATE (GitHub)
+====================================================== */
 
 add_filter('pre_set_site_transient_update_plugins', 'xt_dzen_check_update');
 
@@ -184,16 +182,12 @@ function xt_dzen_check_update($transient) {
         return $transient;
     }
 
-    $response = wp_remote_get(XT_DZEN_UPDATE_URL, [
-        'timeout' => 10,
-    ]);
-
+    $response = wp_remote_get(XT_DZEN_UPDATE_URL, ['timeout' => 10]);
     if (is_wp_error($response)) {
         return $transient;
     }
 
     $data = json_decode(wp_remote_retrieve_body($response));
-
     if (!$data || empty($data->version)) {
         return $transient;
     }
@@ -214,26 +208,23 @@ function xt_dzen_check_update($transient) {
     return $transient;
 }
 
-
 add_filter('plugins_api', 'xt_dzen_plugin_info', 20, 3);
 
 function xt_dzen_plugin_info($false, $action, $args) {
 
-    if ($action !== 'plugin_information') {
-        return false;
-    }
-
-    if ($args->slug !== 'x-tiger-dzen-rss') {
-        return false;
-    }
+    if ($action !== 'plugin_information') return false;
+    if ($args->slug !== 'x-tiger-dzen-rss') return false;
 
     $response = wp_remote_get(XT_DZEN_UPDATE_URL);
-
-    if (is_wp_error($response)) {
-        return false;
-    }
+    if (is_wp_error($response)) return false;
 
     return json_decode(wp_remote_retrieve_body($response));
 }
 
+/* ======================================================
+   ADMIN
+====================================================== */
 
+if (is_admin()) {
+    require_once plugin_dir_path(__FILE__) . 'admin.php';
+}

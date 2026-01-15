@@ -2,7 +2,7 @@
 /**
  * Plugin Name: X-Tiger RSS for Dzen
  * Description: RSS-лента для Яндекс.Дзена с корректной разметкой
- * Version: 1.1.8
+ * Version: 1.1.9
  * Author: X-Tiger
  * Text Domain: x-tiger-dzen-rss
  */
@@ -158,51 +158,43 @@ add_action('template_redirect', function () {
     exit;
 });
 
-/* ======================================================
-   HTML CLEANER (DZEN SAFE)
-====================================================== */
 
 function xt_dzen_clean_html($html) {
 
-    libxml_use_internal_errors(true);
+    // Убираем комментарии Gutenberg
+    $html = preg_replace('/<!--(.|\s)*?-->/', '', $html);
 
-    $dom = new DOMDocument('1.0', 'UTF-8');
-    $dom->loadHTML('<?xml encoding="utf-8" ?>' . $html);
-
+    // Разрешённые теги для Дзена
     $allowed = [
-        'p','a','b','i','u','s',
-        'h2','h3','h4',
-        'ul','ol','li',
-        'blockquote','figure','img','figcaption'
+        'p' => [],
+        'a' => [
+            'href' => [],
+            'title' => [],
+        ],
+        'strong' => [],
+        'b' => [],
+        'em' => [],
+        'i' => [],
+        'ul' => [],
+        'ol' => [],
+        'li' => [],
+        'blockquote' => [],
+        'h2' => [],
+        'h3' => [],
+        'h4' => [],
+        'figure' => [],
+        'figcaption' => [],
+        'img' => [
+            'src' => [],
+            'alt' => [],
+        ],
     ];
 
-    $xpath = new DOMXPath($dom);
-
-    foreach ($xpath->query('//*') as $node) {
-
-        if (!in_array($node->nodeName, $allowed, true)) {
-            while ($node->firstChild) {
-                $node->parentNode->insertBefore($node->firstChild, $node);
-            }
-            $node->parentNode->removeChild($node);
-            continue;
-        }
-
-        // удаляем все атрибуты
-        while ($node->attributes && $node->attributes->length) {
-            $node->removeAttributeNode($node->attributes->item(0));
-        }
-    }
-
-    $body = $dom->getElementsByTagName('body')->item(0);
-    $out  = '';
-
-    foreach ($body->childNodes as $child) {
-        $out .= $dom->saveHTML($child);
-    }
-
-    return trim($out);
+    return wp_kses($html, $allowed);
 }
+
+
+
 
 /* ======================================================
    AUTO UPDATE (GitHub)
@@ -390,6 +382,7 @@ add_filter('site_transient_update_plugins', function ($transient) {
 if (is_admin()) {
     require_once plugin_dir_path(__FILE__) . 'admin.php';
 }
+
 
 
 

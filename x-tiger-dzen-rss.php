@@ -215,4 +215,25 @@ function xt_dzen_check_update($transient) {
 }
 
 
+add_filter('plugins_api', 'xt_dzen_plugin_info', 20, 3);
+
+function xt_dzen_plugin_info($false, $action, $args) {
+
+    if ($action !== 'plugin_information') {
+        return false;
+    }
+
+    if ($args->slug !== 'x-tiger-dzen-rss') {
+        return false;
+    }
+
+    $response = wp_remote_get(XT_DZEN_UPDATE_URL);
+
+    if (is_wp_error($response)) {
+        return false;
+    }
+
+    return json_decode(wp_remote_retrieve_body($response));
+}
+
 

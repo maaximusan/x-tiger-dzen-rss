@@ -50,6 +50,22 @@ function xt_dzen_admin_page() {
                                value="<?php echo esc_attr($options['posts_limit']); ?>">
                     </td>
                 </tr>
+
+                <tr>
+                <th scope="row">Описание канала для Дзена</th>
+                    <td>
+                        <textarea
+                        name="xt_dzen_settings[channel_description]"
+                        rows="4"
+                        cols="60"
+                        ><?= esc_textarea($options['channel_description'] ?? 'Авторский блог о сайтах и цифровых продуктах. Аналитика, наблюдения и объяснение типичных ситуаций в бизнесе без рекламы и призывов.'); ?></textarea>
+                        <p class="description">
+                        Краткое описание источника для модерации Дзена. Без рекламы и призывов.
+                        </p>
+                    </td>
+                </tr>
+
+                
             </table>
 
             <?php submit_button(); ?>
@@ -73,4 +89,5 @@ function xt_dzen_admin_page() {
 
 add_action('admin_init', function () {
     register_setting('xt_dzen_group', XT_DZEN_OPTION);
+
 });

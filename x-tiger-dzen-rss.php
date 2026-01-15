@@ -1,8 +1,8 @@
 <?php
 /**
  * Plugin Name: X-Tiger RSS for Dzen
- * Description: RSS-лента для публикации статей в Яндекс.Дзен с корректной разметкой и автообновлением
- * Version: 1.1.6
+ * Description: RSS-лента для Яндекс.Дзена с корректной разметкой
+ * Version: 1.1.7
  * Author: X-Tiger
  * Text Domain: x-tiger-dzen-rss
  */
@@ -349,3 +349,4 @@ function xt_dzen_check_post_eligibility($post) {
 if (is_admin()) {
     require_once plugin_dir_path(__FILE__) . 'admin.php';
 }
+

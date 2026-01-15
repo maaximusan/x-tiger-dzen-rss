@@ -176,3 +176,43 @@ if (is_admin()) {
 }
 
 
+add_filter('pre_set_site_transient_update_plugins', 'xt_dzen_check_update');
+
+function xt_dzen_check_update($transient) {
+
+    if (empty($transient->checked)) {
+        return $transient;
+    }
+
+    $response = wp_remote_get(XT_DZEN_UPDATE_URL, [
+        'timeout' => 10,
+    ]);
+
+    if (is_wp_error($response)) {
+        return $transient;
+    }
+
+    $data = json_decode(wp_remote_retrieve_body($response));
+
+    if (!$data || empty($data->version)) {
+        return $transient;
+    }
+
+    $plugin_file = plugin_basename(__FILE__);
+    $current_version = $transient->checked[$plugin_file] ?? null;
+
+    if ($current_version && version_compare($current_version, $data->version, '<')) {
+        $transient->response[$plugin_file] = (object) [
+            'slug'        => 'x-tiger-dzen-rss',
+            'plugin'      => $plugin_file,
+            'new_version' => $data->version,
+            'url'         => $data->author_profile ?? '',
+            'package'     => $data->download_url,
+        ];
+    }
+
+    return $transient;
+}
+
+
+

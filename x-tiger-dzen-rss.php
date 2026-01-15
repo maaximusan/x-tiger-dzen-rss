@@ -2,7 +2,7 @@
 /**
  * Plugin Name: X-Tiger RSS for Dzen
  * Description: RSS-лента для публикации статей в Яндекс.Дзен с корректной разметкой
- * Version: 1.1.2
+ * Version: 1.1.4
  * Author: X-Tiger
  * Text Domain: x-tiger-dzen-rss
  */
@@ -167,3 +167,4 @@ function xt_dzen_clean_html($html) {
 if (is_admin()) {
     require_once plugin_dir_path(__FILE__) . 'admin.php';
 }
+

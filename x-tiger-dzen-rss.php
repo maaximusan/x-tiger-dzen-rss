@@ -2,10 +2,11 @@
 /**
  * Plugin Name: X-Tiger RSS for Dzen
  * Description: RSS-лента для публикации статей в Яндекс.Дзен с корректной разметкой и автообновлением
- * Version: 1.1.5
+ * Version: 1.1.6
  * Author: X-Tiger
  * Text Domain: x-tiger-dzen-rss
  */
+
 
 if (!defined('ABSPATH')) {
     exit;
@@ -22,6 +23,22 @@ define(
     'https://raw.githubusercontent.com/maaximusan/x-tiger-dzen-rss/main/update.json'
 );
 
+/**
+ * Разрешённые категории Дзена (whitelist)
+ * Нейтральные жанры, безопасные для модерации
+ */
+function xt_dzen_allowed_modes() {
+    return [
+        'news'      => 'Новости',
+        'analytics' => 'Аналитика',
+        'education' => 'Обучение',
+        'opinion'   => 'Мнение',
+        'review'    => 'Обзор',
+        'feature'   => 'Материал',
+        'insight'   => 'Инсайт',
+    ];
+}
+
 /* ======================================================
    АКТИВАЦИЯ
 ====================================================== */
@@ -30,9 +47,9 @@ register_activation_hook(__FILE__, function () {
 
     add_option(XT_DZEN_OPTION, [
         'posts_limit'         => 10,
-        'days_limit'          => 30,
-        'mode'                => 'native',
-        'channel_description' => 'Авторский блог о сайтах и цифровых продуктах. Аналитика, наблюдения и объяснение типичных ситуаций в бизнесе без рекламы и призывов.',
+        'category_slug'       => 'dzen',        // WP-рубрика
+        'mode'                => 'education',   // категория Дзена (безопасная по умолчанию)
+        'channel_description' => 'Авторский блог о сайтах и цифровых продуктах. Аналитика, объяснения и наблюдения без рекламы и призывов.',
     ]);
 
     flush_rewrite_rules();
@@ -61,6 +78,15 @@ add_action('template_redirect', function () {
 
     $opt = get_option(XT_DZEN_OPTION, []);
 
+    // Безопасная категория Дзена
+    $allowed_modes = xt_dzen_allowed_modes();
+    $mode = isset($allowed_modes[$opt['mode'] ?? ''])
+        ? $opt['mode']
+        : 'education';
+
+    // WP-рубрика
+    $category_slug = sanitize_title($opt['category_slug'] ?? 'dzen');
+
     echo '<?xml version="1.0" encoding="UTF-8"?>';
 ?>
 <rss version="2.0" xmlns:content="http://purl.org/rss/1.0/modules/content/">
@@ -81,7 +107,7 @@ add_action('template_redirect', function () {
         'post_type'        => 'post',
         'post_status'      => 'publish',
         'posts_per_page'   => (int) ($opt['posts_limit'] ?? 10),
-        'category_name'    => 'dzen',
+        'category_name'    => $category_slug,
         'suppress_filters' => true,
     ]);
 
@@ -91,25 +117,31 @@ add_action('template_redirect', function () {
         $id   = $post->ID;
         $guid = get_permalink($id);
 
-        // изображение обязательно
+        // Обязательное изображение
         $thumb_id = get_post_thumbnail_id($id);
-        if (!$thumb_id) continue;
+        if (!$thumb_id) {
+            continue;
+        }
 
         $img = wp_get_attachment_image_src($thumb_id, 'full');
-        if (!$img || $img[1] < 700) continue;
+        if (!$img || $img[1] < 700) {
+            continue;
+        }
 
-        // контент
+        // Контент
         $raw   = apply_filters('the_content', $post->post_content);
         $clean = xt_dzen_clean_html($raw);
 
-        if (mb_strlen(strip_tags($clean)) < 300) continue;
+        if (mb_strlen(strip_tags($clean)) < 300) {
+            continue;
+        }
 ?>
     <item>
         <title><?= esc_html(get_the_title($id)); ?></title>
         <link><?= esc_url($guid); ?></link>
         <guid isPermaLink="true"><?= esc_url($guid); ?></guid>
         <pubDate><?= mysql2date(DATE_RSS, get_post_time('Y-m-d H:i:s', true, $id)); ?></pubDate>
-        <category><?= esc_html($opt['mode'] ?? 'native'); ?></category>
+        <category><?= esc_html($mode); ?></category>
         <enclosure url="<?= esc_url($img[0]); ?>" type="image/jpeg"/>
         <content:encoded><![CDATA[
 <?= $clean; ?>
@@ -147,6 +179,7 @@ function xt_dzen_clean_html($html) {
     $xpath = new DOMXPath($dom);
 
     foreach ($xpath->query('//*') as $node) {
+
         if (!in_array($node->nodeName, $allowed, true)) {
             while ($node->firstChild) {
                 $node->parentNode->insertBefore($node->firstChild, $node);
@@ -155,6 +188,7 @@ function xt_dzen_clean_html($html) {
             continue;
         }
 
+        // удаляем все атрибуты
         while ($node->attributes && $node->attributes->length) {
             $node->removeAttributeNode($node->attributes->item(0));
         }
@@ -192,7 +226,7 @@ function xt_dzen_check_update($transient) {
         return $transient;
     }
 
-    $plugin_file = plugin_basename(__FILE__);
+    $plugin_file    = plugin_basename(__FILE__);
     $current_version = $transient->checked[$plugin_file] ?? null;
 
     if ($current_version && version_compare($current_version, $data->version, '<')) {
@@ -212,14 +246,101 @@ add_filter('plugins_api', 'xt_dzen_plugin_info', 20, 3);
 
 function xt_dzen_plugin_info($false, $action, $args) {
 
-    if ($action !== 'plugin_information') return false;
-    if ($args->slug !== 'x-tiger-dzen-rss') return false;
+    if ($action !== 'plugin_information') {
+        return false;
+    }
+
+    if ($args->slug !== 'x-tiger-dzen-rss') {
+        return false;
+    }
 
     $response = wp_remote_get(XT_DZEN_UPDATE_URL);
-    if (is_wp_error($response)) return false;
+    if (is_wp_error($response)) {
+        return false;
+    }
 
     return json_decode(wp_remote_retrieve_body($response));
 }
+
+
+/* ======================================================
+   Выводим последние записи RSS
+====================================================== */
+
+
+function xt_dzen_get_rss_items_preview($limit = 5) {
+
+    $opt = get_option(XT_DZEN_OPTION, []);
+    $items = [];
+
+    $posts = get_posts([
+        'post_type'      => 'post',
+        'post_status'    => 'publish',
+        'posts_per_page' => $limit,
+        'category_name'  => sanitize_title($opt['category_slug'] ?? 'dzen'),
+    ]);
+
+    foreach ($posts as $post) {
+
+        $thumb_id = get_post_thumbnail_id($post->ID);
+        if (!$thumb_id) continue;
+
+        $raw   = apply_filters('the_content', $post->post_content);
+        $clean = xt_dzen_clean_html($raw);
+
+        if (mb_strlen(strip_tags($clean)) < 300) continue;
+
+        $items[] = [
+            'title' => get_the_title($post->ID),
+            'date'  => get_the_date('', $post->ID),
+            'text'  => mb_substr(strip_tags($clean), 0, 300) . '…',
+        ];
+    }
+
+    return $items;
+}
+
+
+/* ======================================================
+   Индикаторы, почему не прошла модерация
+====================================================== */
+
+function xt_dzen_check_post_eligibility($post) {
+
+    $opt = get_option(XT_DZEN_OPTION, []);
+    $reasons = [];
+
+    if ($post->post_status !== 'publish') {
+        $reasons[] = 'Пост не опубликован';
+    }
+
+    if (!has_category($opt['category_slug'], $post)) {
+        $reasons[] = 'Пост не в выбранной рубрике';
+    }
+
+    $thumb_id = get_post_thumbnail_id($post->ID);
+    if (!$thumb_id) {
+        $reasons[] = 'Нет изображения записи';
+    } else {
+        $img = wp_get_attachment_image_src($thumb_id, 'full');
+        if (!$img || $img[1] < 700) {
+            $reasons[] = 'Изображение меньше 700px по ширине';
+        }
+    }
+
+    $raw   = apply_filters('the_content', $post->post_content);
+    $clean = xt_dzen_clean_html($raw);
+
+    if (mb_strlen(strip_tags($clean)) < 300) {
+        $reasons[] = 'Слишком короткий текст после очистки';
+    }
+
+    return $reasons;
+}
+
+
+
+
 
 /* ======================================================
    ADMIN

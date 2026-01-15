@@ -339,6 +339,47 @@ function xt_dzen_check_post_eligibility($post) {
 }
 
 
+/* ======================================================
+   PLUGIN UPDATE CHECK (GitHub / update.json)
+====================================================== */
+
+add_filter('site_transient_update_plugins', function ($transient) {
+
+    if (empty($transient->checked)) {
+        return $transient;
+    }
+
+    $plugin_slug = plugin_basename(__FILE__);
+    $current_version = get_file_data(__FILE__, ['Version' => 'Version'])['Version'];
+
+    $response = wp_remote_get(
+        'https://raw.githubusercontent.com/maaximusan/x-tiger-dzen-rss/main/update.json',
+        ['timeout' => 10]
+    );
+
+    if (is_wp_error($response)) {
+        return $transient;
+    }
+
+    $data = json_decode(wp_remote_retrieve_body($response));
+
+    if (
+        empty($data->version) ||
+        version_compare($current_version, $data->version, '>=')
+    ) {
+        return $transient;
+    }
+
+    $transient->response[$plugin_slug] = (object) [
+        'slug'        => dirname($plugin_slug),
+        'plugin'      => $plugin_slug,
+        'new_version' => $data->version,
+        'url'         => $data->homepage ?? '',
+        'package'     => $data->download_url,
+    ];
+
+    return $transient;
+});
 
 
 
@@ -349,4 +390,5 @@ function xt_dzen_check_post_eligibility($post) {
 if (is_admin()) {
     require_once plugin_dir_path(__FILE__) . 'admin.php';
 }
+
 

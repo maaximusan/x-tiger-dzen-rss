@@ -1,6 +1,10 @@
 <?php
 if (!defined('ABSPATH')) exit;
 
+if (!defined('XT_DZEN_OPTION')) {
+    define('XT_DZEN_OPTION', 'xt_dzen_settings');
+}
+
 /**
  * Admin page for X-Tiger RSS for Dzen
  */
@@ -143,3 +147,4 @@ function xt_dzen_settings_page() {
 
 <?php
 }
+

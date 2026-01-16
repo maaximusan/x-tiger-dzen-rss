@@ -1,14 +1,20 @@
 === X-Tiger RSS for Dzen ===
-Contributors: x-tiger
+Contributors: Интернет-агентство Икс-Тайгер - https://x-tiger.ru
 Tags: rss, dzen, yandex, feed, content, zen
 Requires at least: 5.8
 Tested up to: 6.5
 Stable tag: 1.1.9
 Requires PHP: 7.2
 License: GPLv2 or later
-License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
 Безопасная и стабильная RSS-лента для Яндекс.Дзена с учётом требований модерации и особенностей WordPress (Gutenberg).
+
+== Приобрести плагин можно здесь ==
+
+
+https://x-tiger.ru/rss-dlja-dzena-iz-wordpress-plagin-dlja-avtomaticheskoj-publikacii-2026/
+
+
 
 == Description ==
 
@@ -79,5 +85,6 @@ X-Tiger RSS for Dzen — плагин для WordPress, который созд�
 
 = 1.1.7 =
 Рекомендуется обновиться. Исправлены причины пустой RSS и повышена совместимость с требованиями Яндекс.Дзена.
+
 
 

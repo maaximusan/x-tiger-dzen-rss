@@ -10,6 +10,9 @@ License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
 Безопасная и стабильная RSS-лента для Яндекс.Дзена с учётом требований модерации и особенностей WordPress (Gutenberg).
 
+== Приобрести плагин можно здесь ==
+https://x-tiger.ru/rss-dlja-dzena-iz-wordpress-plagin-dlja-avtomaticheskoj-publikacii-2026/
+
 == Description ==
 
 X-Tiger RSS for Dzen — плагин для WordPress, который создаёт отдельную RSS-ленту, корректно подготовленную для публикации материалов в Яндекс.Дзене.
